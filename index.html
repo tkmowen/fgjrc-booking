@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>FGJRC Booking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+
+body {
+font-family: Arial;
+max-width: 600px;
+margin: auto;
+padding: 20px;
+}
+
+.logo {
+width:150px;
+display:block;
+margin:auto;
+}
+
+button{
+padding:10px;
+margin-top:5px;
+width:100%;
+}
+
+input,select{
+padding:10px;
+width:100%;
+margin-top:5px;
+}
+
+.card{
+border:1px solid #ddd;
+padding:10px;
+margin-top:10px;
+border-radius:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<img src="https://i.imgur.com/placeholder.png" class="logo">
+
+<h2 align="center">
+Fishguard & Goodwick Jemima Rowing Club
+</h2>
+
+<h3>Login</h3>
+
+<input id="name" placeholder="Your name">
+
+<button onclick="login()">Login</button>
+
+<div id="app" style="display:none">
+
+<h3>Book Asset</h3>
+
+<select id="asset">
+<option>Single Scull 1</option>
+<option>Double Scull 1</option>
+<option>Quad</option>
+<option>Erg 1</option>
+<option>Erg 2</option>
+</select>
+
+<input type="date" id="date">
+
+Start Time
+<input type="time" id="start">
+
+End Time
+<input type="time" id="end">
+
+<button onclick="book()">Book</button>
+
+<h3>Bookings</h3>
+
+<div id="bookings"></div>
+
+</div>
+
+<script>
+
+var user=""
+var bookings=[]
+
+function login(){
+
+user=document.getElementById("name").value
+
+document.getElementById("app").style.display="block"
+
+}
+
+function book(){
+
+var asset=document.getElementById("asset").value
+var date=document.getElementById("date").value
+var start=document.getElementById("start").value
+var end=document.getElementById("end").value
+
+bookings.push({
+asset,date,start,end,user
+})
+
+draw()
+
+}
+
+function draw(){
+
+var html=""
+
+bookings.forEach(b=>{
+
+html+=`
+<div class="card">
+
+<b>${b.asset}</b><br>
+
+${b.date} ${b.start}-${b.end}<br>
+
+Booked by ${b.user}
+
+</div>
+`
+
+})
+
+document.getElementById("bookings").innerHTML=html
+
+}
+
+</script>
+
+</body>
+</html>

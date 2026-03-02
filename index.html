@@ -17,6 +17,10 @@ padding:20px;
 background:#f4f4f4;
 }
 
+h2,h3{
+text-align:center;
+}
+
 button{
 padding:12px;
 margin-top:6px;
@@ -53,10 +57,9 @@ border-radius:10px;
 margin-top:20px;
 }
 
-.sectionTitle{
-margin-top:20px;
+.section{
 font-weight:bold;
-font-size:18px;
+margin-top:20px;
 }
 
 </style>
@@ -65,13 +68,15 @@ font-size:18px;
 
 <body>
 
-<h2 align="center">
+
+<h2>
 Fishguard & Goodwick Jemima Rowing Club
 </h2>
 
-<h3 align="center">
+<h3>
 Booking System
 </h3>
+
 
 
 <div id="loginPage">
@@ -84,6 +89,7 @@ Booking System
 <button onclick="login()">
 Login
 </button>
+
 
 <h3>Create Account</h3>
 
@@ -100,14 +106,16 @@ Create Account
 
 <div id="app" style="display:none">
 
+
 <div class="menu">
 
 <button onclick="show('bookPage')">Book</button>
 <button onclick="show('allPage')">Bookings</button>
 <button onclick="show('myPage')">My Bookings</button>
-<button onclick="show('assetPage')">Assets</button>
+<button onclick="show('assetPage')">Asset Management</button>
 
 </div>
+
 
 
 <div id="bookPage">
@@ -129,6 +137,7 @@ End
 </div>
 
 
+
 <div id="allPage" style="display:none">
 
 <h3>All Bookings</h3>
@@ -136,6 +145,7 @@ End
 <div id="allBookings"></div>
 
 </div>
+
 
 
 <div id="myPage" style="display:none">
@@ -147,34 +157,56 @@ End
 </div>
 
 
+
 <div id="assetPage" style="display:none" class="admin">
 
 <h3>Asset Management</h3>
 
+
+<h4>Add Boat</h4>
+
+<input id="newBoatName" placeholder="Boat Name">
+
+<select id="boatType">
+
+<option>Single</option>
+<option>Double</option>
+<option>Quad</option>
+
+</select>
+
+<button onclick="addBoat()">
 Add Boat
-
-<input id="newBoat" placeholder="Boat name">
-
-<button onclick="addBoat()">Add Boat</button>
+</button>
 
 
+
+<h4>Add Erg</h4>
+
+<input id="newErgName" placeholder="Erg Name">
+
+<button onclick="addErg()">
 Add Erg
-
-<input id="newErg" placeholder="Erg name">
-
-<button onclick="addErg()">Add Erg</button>
+</button>
 
 
-<div class="sectionTitle">
-Boats
-</div>
 
-<div id="boats"></div>
+<div class="section">Singles</div>
+
+<div id="singles"></div>
 
 
-<div class="sectionTitle">
-Ergs
-</div>
+<div class="section">Doubles</div>
+
+<div id="doubles"></div>
+
+
+<div class="section">Quads</div>
+
+<div id="quads"></div>
+
+
+<div class="section">Ergs</div>
 
 <div id="ergs"></div>
 
@@ -189,6 +221,7 @@ Ergs
 <script>
 
 
+
 var user=""
 
 
@@ -199,14 +232,24 @@ var users=JSON.parse(localStorage.getItem("users")) || [
 ]
 
 
+
 var boats=JSON.parse(localStorage.getItem("boats")) || [
 
-{name:"Single 1",status:"Available"},
-{name:"Single 2",status:"Available"},
-{name:"Double 1",status:"Available"},
-{name:"Quad",status:"Available"}
+{name:"Welsh Rowing 006",type:"Single",status:"Available"},
+{name:"Welsh Rowing 005",type:"Single",status:"Available"},
+{name:"Private Kraig",type:"Single",status:"Available"},
+{name:"Private Martha",type:"Single",status:"Available"},
+{name:"Private Gaynor",type:"Single",status:"Available"},
+{name:"Private Pete",type:"Single",status:"Available"},
+
+{name:"Nicky",type:"Double",status:"Available"},
+{name:"Welsh Rowing Double",type:"Double",status:"Available"},
+
+{name:"New Quad",type:"Quad",status:"Available"},
+{name:"WSR Quad",type:"Quad",status:"Available"}
 
 ]
+
 
 
 var ergs=JSON.parse(localStorage.getItem("ergs")) || [
@@ -220,7 +263,9 @@ var ergs=JSON.parse(localStorage.getItem("ergs")) || [
 ]
 
 
+
 var bookings=JSON.parse(localStorage.getItem("bookings")) || []
+
 
 
 function save(){
@@ -233,21 +278,21 @@ localStorage.setItem("bookings",JSON.stringify(bookings))
 }
 
 
+
 function createAccount(){
 
-var n=newName.value
-var p=newPass.value
-
 users.push({
-name:n,
-pass:p,
-approved:false,
+
+name:newName.value,
+pass:newPass.value,
+approved:true,
 admin:false
+
 })
 
 save()
 
-alert("Account created. Wait for approval.")
+alert("Account Created")
 
 }
 
@@ -255,29 +300,23 @@ alert("Account created. Wait for approval.")
 
 function login(){
 
-var n=loginName.value
-var p=loginPass.value
+var found=users.find(u=>
 
-var found=users.find(u=>u.name==n && u.pass==p)
+u.name==loginName.value &&
+u.pass==loginPass.value
+
+)
 
 if(!found){
 
-alert("Login failed")
+alert("Login Failed")
 return
 
 }
 
-if(!found.approved){
-
-alert("Waiting for admin approval")
-return
-
-}
-
-user=n
+user=found.name
 
 loginPage.style.display="none"
-
 app.style.display="block"
 
 drawAssets()
@@ -328,48 +367,76 @@ drawAssetManager()
 
 function drawAssetManager(){
 
-var bhtml=""
+
+
+var singlesHTML=""
+var doublesHTML=""
+var quadsHTML=""
+var ergHTML=""
+
+
 
 boats.forEach((b,i)=>{
 
-bhtml+=`
+
+var card=`
 
 <div class="card">
 
 <input value="${b.name}" onchange="renameBoat(${i},this.value)">
 
+<br>
+
 ${b.status}
+
+<br>
 
 <button onclick="toggleBoat(${i})">
 Toggle Status
 </button>
 
+<button onclick="deleteBoat(${i})">
+Delete Boat
+</button>
+
 </div>
 
 `
 
+
+if(b.type=="Single")
+singlesHTML+=card
+
+if(b.type=="Double")
+doublesHTML+=card
+
+if(b.type=="Quad")
+quadsHTML+=card
+
+
 })
 
 
-boatsDiv=document.getElementById("boats")
-boatsDiv.innerHTML=bhtml
-
-
-
-var ehtml=""
-
 ergs.forEach((e,i)=>{
 
-ehtml+=`
+ergHTML+=`
 
 <div class="card">
 
 <input value="${e.name}" onchange="renameErg(${i},this.value)">
 
+<br>
+
 ${e.status}
+
+<br>
 
 <button onclick="toggleErg(${i})">
 Toggle Status
+</button>
+
+<button onclick="deleteErg(${i})">
+Delete Erg
 </button>
 
 </div>
@@ -379,8 +446,11 @@ Toggle Status
 })
 
 
-ergsDiv=document.getElementById("ergs")
-ergsDiv.innerHTML=ehtml
+singles.innerHTML=singlesHTML
+doubles.innerHTML=doublesHTML
+quads.innerHTML=quadsHTML
+ergs.innerHTML=ergHTML
+
 
 }
 
@@ -413,7 +483,10 @@ drawAssets()
 function toggleBoat(i){
 
 boats[i].status=
-boats[i].status=="Available"?"Out of Service":"Available"
+
+boats[i].status=="Available"
+?"Out of Service"
+:"Available"
 
 save()
 
@@ -426,7 +499,10 @@ drawAssets()
 function toggleErg(i){
 
 ergs[i].status=
-ergs[i].status=="Available"?"Out of Service":"Available"
+
+ergs[i].status=="Available"
+?"Out of Service"
+:"Available"
 
 save()
 
@@ -436,11 +512,44 @@ drawAssets()
 
 
 
+function deleteBoat(i){
+
+if(confirm("Delete Boat?")){
+
+boats.splice(i,1)
+
+save()
+
+drawAssets()
+
+}
+
+}
+
+
+
+function deleteErg(i){
+
+if(confirm("Delete Erg?")){
+
+ergs.splice(i,1)
+
+save()
+
+drawAssets()
+
+}
+
+}
+
+
+
 function addBoat(){
 
 boats.push({
 
-name:newBoat.value,
+name:newBoatName.value,
+type:boatType.value,
 status:"Available"
 
 })
@@ -457,7 +566,7 @@ function addErg(){
 
 ergs.push({
 
-name:newErg.value,
+name:newErgName.value,
 status:"Available"
 
 })
@@ -472,16 +581,20 @@ drawAssets()
 
 function book(){
 
+
 var asset=assetSelect.value
-var date=date.value
-var start=start.value
-var end=end.value
+
+var d=date.value
+
+var s=start.value
+
+var e=end.value
 
 
 var assetObj=
 
 boats.find(b=>b.name==asset) ||
-ergs.find(e=>e.name==asset)
+ergs.find(x=>x.name==asset)
 
 
 
@@ -499,12 +612,12 @@ for(var b of bookings){
 if(
 
 b.asset==asset &&
-b.date==date &&
-!(end<=b.start || start>=b.end)
+b.date==d &&
+!(e<=b.start || s>=b.end)
 
 ){
 
-alert("Time conflict")
+alert("Time Conflict")
 return
 
 }
@@ -514,9 +627,14 @@ return
 
 bookings.push({
 
-asset,date,start,end,user
+asset:asset,
+date:d,
+start:s,
+end:e,
+user:user
 
 })
+
 
 save()
 

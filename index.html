@@ -1,41 +1,62 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
 <title>FGJRC Booking</title>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
-body {
-font-family: Arial;
-max-width: 600px;
-margin: auto;
-padding: 20px;
+body{
+font-family:Arial;
+max-width:800px;
+margin:auto;
+padding:20px;
+background:#f5f5f5;
 }
 
-.logo {
+.logo{
 width:150px;
 display:block;
 margin:auto;
 }
 
 button{
-padding:10px;
-margin-top:5px;
+padding:12px;
+margin-top:6px;
+background:black;
+color:white;
+border:none;
+border-radius:8px;
 width:100%;
 }
 
 input,select{
-padding:10px;
 width:100%;
-margin-top:5px;
+padding:10px;
+margin-top:6px;
 }
 
 .card{
-border:1px solid #ddd;
-padding:10px;
+background:white;
+padding:12px;
 margin-top:10px;
 border-radius:10px;
+border:1px solid #ddd;
+}
+
+.menu button{
+width:32%;
+margin:2px;
+}
+
+.admin{
+background:#fff3cd;
+padding:10px;
+border-radius:10px;
+margin-top:20px;
 }
 
 </style>
@@ -44,99 +65,417 @@ border-radius:10px;
 
 <body>
 
-<img src="https://i.imgur.com/placeholder.png" class="logo">
-
 <h2 align="center">
 Fishguard & Goodwick Jemima Rowing Club
 </h2>
 
+<h3 align="center">
+Booking System
+</h3>
+
+
+<div id="login">
+
 <h3>Login</h3>
 
-<input id="name" placeholder="Your name">
+<input id="name" placeholder="Name">
 
-<button onclick="login()">Login</button>
-
-<div id="app" style="display:none">
-
-<h3>Book Asset</h3>
-
-<select id="asset">
-<option>Single Scull 1</option>
-<option>Double Scull 1</option>
-<option>Quad</option>
-<option>Erg 1</option>
-<option>Erg 2</option>
-</select>
-
-<input type="date" id="date">
-
-Start Time
-<input type="time" id="start">
-
-End Time
-<input type="time" id="end">
-
-<button onclick="book()">Book</button>
-
-<h3>Bookings</h3>
-
-<div id="bookings"></div>
+<button onclick="login()">
+Login
+</button>
 
 </div>
 
+
+<div id="app" style="display:none">
+
+<div class="menu">
+
+<button onclick="show('bookPage')">
+Book
+</button>
+
+<button onclick="show('allPage')">
+Bookings
+</button>
+
+<button onclick="show('myPage')">
+My Bookings
+</button>
+
+</div>
+
+
+<div id="bookPage">
+
+<h3>Create Booking</h3>
+
+<select id="assetSelect"></select>
+
+<input type="date" id="date">
+
+Start
+<input type="time" id="start">
+
+End
+<input type="time" id="end">
+
+<button onclick="book()">
+Book
+</button>
+
+</div>
+
+
+<div id="allPage" style="display:none">
+
+<h3>All Bookings</h3>
+
+<div id="allBookings"></div>
+
+</div>
+
+
+<div id="myPage" style="display:none">
+
+<h3>My Bookings</h3>
+
+<div id="myBookings"></div>
+
+</div>
+
+
+
+<div id="adminPanel" class="admin" style="display:none">
+
+<h3>Admin Panel</h3>
+
+<input id="newAsset" placeholder="New Boat or Erg">
+
+<button onclick="addAsset()">
+Add Asset
+</button>
+
+<div id="assets"></div>
+
+</div>
+
+
+</div>
+
+
+
 <script>
 
+
 var user=""
-var bookings=[]
+
+
+
+var assets=JSON.parse(localStorage.getItem("assets")) || [
+
+{name:"Single 1",status:"Available"},
+{name:"Single 2",status:"Available"},
+{name:"Double 1",status:"Available"},
+{name:"Quad",status:"Available"},
+{name:"Erg 1",status:"Available"},
+{name:"Erg 2",status:"Available"}
+
+]
+
+
+var bookings=JSON.parse(localStorage.getItem("bookings")) || []
+
+
+
+function save(){
+
+localStorage.setItem("assets",JSON.stringify(assets))
+
+localStorage.setItem("bookings",JSON.stringify(bookings))
+
+}
+
+
 
 function login(){
 
 user=document.getElementById("name").value
 
+document.getElementById("login").style.display="none"
+
 document.getElementById("app").style.display="block"
 
+
+if(user=="admin"){
+
+document.getElementById("adminPanel").style.display="block"
+
 }
+
+drawAssets()
+
+drawBookings()
+
+drawMyBookings()
+
+}
+
+
+
+function show(page){
+
+document.getElementById("bookPage").style.display="none"
+document.getElementById("allPage").style.display="none"
+document.getElementById("myPage").style.display="none"
+
+document.getElementById(page).style.display="block"
+
+}
+
+
+
+function drawAssets(){
+
+var html=""
+var select=""
+
+assets.forEach(a=>{
+
+select+=`<option>${a.name}</option>`
+
+html+=`
+
+<div class="card">
+
+${a.name}
+
+<br>
+
+${a.status}
+
+<br>
+
+<button onclick="toggle('${a.name}')">
+
+Toggle Status
+
+</button>
+
+</div>
+
+`
+
+})
+
+document.getElementById("assetSelect").innerHTML=select
+
+document.getElementById("assets").innerHTML=html
+
+}
+
+
+
+function toggle(name){
+
+assets.forEach(a=>{
+
+if(a.name==name){
+
+a.status=a.status=="Available"?"Out of Service":"Available"
+
+}
+
+})
+
+save()
+
+drawAssets()
+
+}
+
+
+
+function addAsset(){
+
+var name=document.getElementById("newAsset").value
+
+assets.push({
+
+name:name,
+
+status:"Available"
+
+})
+
+save()
+
+drawAssets()
+
+}
+
+
 
 function book(){
 
-var asset=document.getElementById("asset").value
+var asset=document.getElementById("assetSelect").value
+
 var date=document.getElementById("date").value
+
 var start=document.getElementById("start").value
+
 var end=document.getElementById("end").value
 
-bookings.push({
-asset,date,start,end,user
-})
 
-draw()
+var selectedAsset=assets.find(a=>a.name==asset)
+
+if(selectedAsset.status!="Available"){
+
+alert("Out of Service")
+
+return
 
 }
 
-function draw(){
+
+
+for(var i=0;i<bookings.length;i++){
+
+var b=bookings[i]
+
+if(
+
+b.asset==asset &&
+
+b.date==date &&
+
+!(end<=b.start || start>=b.end)
+
+){
+
+alert("Time conflict")
+
+return
+
+}
+
+}
+
+
+
+bookings.push({
+
+asset,date,start,end,user
+
+})
+
+save()
+
+drawBookings()
+
+drawMyBookings()
+
+}
+
+
+
+function drawBookings(){
 
 var html=""
 
 bookings.forEach(b=>{
 
 html+=`
+
 <div class="card">
 
-<b>${b.asset}</b><br>
+<b>${b.asset}</b>
 
-${b.date} ${b.start}-${b.end}<br>
+<br>
 
-Booked by ${b.user}
+${b.date}
+
+<br>
+
+${b.start}-${b.end}
+
+<br>
+
+${b.user}
 
 </div>
+
 `
 
 })
 
-document.getElementById("bookings").innerHTML=html
+document.getElementById("allBookings").innerHTML=html
 
 }
 
+
+
+function drawMyBookings(){
+
+var html=""
+
+bookings.forEach((b,i)=>{
+
+if(b.user==user){
+
+html+=`
+
+<div class="card">
+
+<b>${b.asset}</b>
+
+<br>
+
+${b.date}
+
+<br>
+
+${b.start}-${b.end}
+
+<br>
+
+<button onclick="cancel(${i})">
+
+Cancel
+
+</button>
+
+</div>
+
+`
+
+}
+
+})
+
+document.getElementById("myBookings").innerHTML=html
+
+}
+
+
+
+function cancel(i){
+
+bookings.splice(i,1)
+
+save()
+
+drawBookings()
+
+drawMyBookings()
+
+}
+
+
+
 </script>
 
+
 </body>
+
 </html>
